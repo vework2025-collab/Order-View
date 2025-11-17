@@ -1,335 +1,298 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Vasansi Jaipur Order Dashboard</title>
+<meta charset="utf-8" />
+<title>Vasansi Enterprise Application — Dashboard</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:,">
 <style>
-  body { font-family: "Segoe UI", sans-serif; background: #f7f8fa; padding: 20px; }
-  h1 { text-align: center; margin-bottom: 15px; }
-
-  table { width: 100%; border-collapse: collapse; background: white; }
-  th, td {
-    border: 1px solid #ddd;
-    padding: 6px 8px;
-    text-align: left;
-    font-size: 13px;
-    vertical-align: center;
-    white-space: nowrap;
-  }
-  th { background: #f2f2f2; position: sticky; top: 0; z-index: 2; cursor: pointer; }
-  th.sort-asc::after { content: " ▲"; }
-  th.sort-desc::after { content: " ▼"; }
-
-  img { width: 100px; height: 150px; object-fit: cover; border-radius: 5px; }
-
-  .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin-bottom: 15px; }
-  select, input, button { padding: 6px; border-radius: 4px; border: 1px solid #ccc; }
-  button { background: #007bff; color: white; cursor: pointer; border: none; }
-  button:hover { background: #0056b3; }
-  #searchBar { width: 260px; }
-
-  .save-btn { background: #28a745; color: white; padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; }
-  .save-btn:hover { background: #218838; }
-
-  .remark-cell { white-space: normal; max-width: 400px; min-width: 150px; }
-
-  .pagination { text-align: center; margin-top: 10px; }
-  .pagination button {
-    margin: 0 2px;
-    padding: 5px 10px;
-    border: 1px solid #007bff;
-    border-radius: 4px;
-    background: white;
-    color: #007bff;
-    cursor: pointer;
-  }
-  .pagination button.active { background: #007bff; color: white; }
-  .pagination button[disabled] { opacity: 0.4; cursor: not-allowed; }
-
-  #entriesSelect { border: 1px solid #ccc; border-radius: 4px; padding: 4px 6px; margin: 0 4px; }
-
-  .status-checkboxes { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 1010px; margin: 0 auto; }
-  .status-checkboxes label { font-size: 15px; display: flex; align-items: center; gap: 4px; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:14px; }
+  .kpi { background:#fff; border:1px solid #ddd; border-radius:10px; padding:14px; box-shadow:0 1px 2px rgba(0,0,0,.05); }
+  .kpi .label{ font-size:12px; color:#666; margin-bottom:6px; }
+  .kpi .value{ font-size:22px; font-weight:700; }
+  .kpi .sub  { font-size:12px; color:#888; margin-top:6px; }
+  .table { width:100%; border-collapse:collapse; background:#fff; }
+  .table th, .table td { border:1px solid #e3e3e3; padding:6px 8px; font-size:13px; white-space:nowrap; }
+  .table th { background:#f5f6f7; cursor:pointer; }
+  .bar{ height:8px; background:#e9ecef; border-radius:4px; overflow:hidden; min-width:120px; }
+  .bar>span{ display:block; height:100%; background:#007bff; }
+  .clickable { cursor:pointer; color:#007bff; font-weight:600; }
+  .clickable:hover { text-decoration: underline; }
+  .controls { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; align-items:center; }
 </style>
 </head>
 <body>
+<div class="app">
+  <div class="topbar">
+    <div class="title">Vasansi Enterprise Application</div>
+    <div class="user">Hemant Solanki ▼</div>
+  </div>
 
-<h1>💻 Vasansi Jaipur Order Dashboard</h1>
+  <aside class="sidebar">
+    <ul class="nav">
+      <li><a href="index.html">🏠 <span class="label">Dashboard</span></a></li>
+      <li><a href="dispatch.html">📦 <span class="label">Dispatch</span></a></li>
+      <li class="section-title">Job Work</li>
+      <li>
+        <a href="jobwork.html">🧵 <span class="label">All Jobs</span></a>
+        <ul class="submenu">
+          <li><a href="jobwork.html#Job%20Issue">Job Work Issue</a></li>
+          <li><a href="jobwork.html#Job%20Work%20Receive">Job Work Receive</a></li>
+          </ul>
+      </li>    
+      <li class="section-title">Order</li>
+      <li>
+        <a href="orders.html">📋 <span class="label">All Orders</span></a>
+        <ul class="submenu">
+          <li><a href="orders.html#Branch%20Sales%20Order">Branch Sales Order</a></li>
+          <li><a href="orders.html#Jaipur%20Sales%20Order">Jaipur Sales Order</a></li>
+          <li><a href="orders.html#Jaipur%20Alterations">Jaipur Alterations</a></li>
+          <li><a href="orders.html#Exhibition%20Sales%20Order">Exhibition Sales Order</a></li>
+          <li><a href="orders.html#Wholesale%20Order">Wholesale Order</a></li>
+        </ul>
+      </li>
+      <li>
+  <a href="#">🏭 <span class="label">Production</span></a>
+  <ul class="submenu">
+    <li><a href="production.html">Production Overview</a></li>
+    <li>
+  <a href="https://script.google.com/macros/s/AKfycbwdBfo7pkIp6qijqbm6OFRVwuiupx_Y6-B00nqDm69MqQp9FXRw0cpi0vC_vf_rm-Rv/exec" 
+     target="_blank">
+     Sample Form
+  </a>
+</li>
 
-<!-- Filters -->
-<div class="controls">
-  <label>Order No: <input type="text" id="filterOrderNo" placeholder="Enter order no..."></label>
-  <label>Order Date: <input type="date" id="filterOrderStart"> to <input type="date" id="filterOrderEnd"></label>
-  <label>Delivery Date: <input type="date" id="filterDeliveryStart"> to <input type="date" id="filterDeliveryEnd"></label>
-  <label>Unit: <select id="filterUnit"></select></label>
-  <label>Sheet Name: <select id="filterSheet"></select></label>
+    <li><a href="sample_view.html">Sample View</a></li>
+  </ul>
+</li>
+
+      <li><a href="reports.html">📑 <span class="label">Reports</span></a></li>
+    </ul>
+  </aside>
+
+  <main class="content">
+    <div class="kpis">
+      <div class="kpi"><div class="label">Total Orders</div><div class="value" id="kpiTotal">–</div><div class="sub" id="kpiRange"></div></div>
+      <div class="kpi"><div class="label">In Production</div><div class="value" id="kpiInProd">–</div><div class="sub">(blank + early statuses)</div></div>
+      <div class="kpi"><div class="label">Ready For Delivery</div><div class="value" id="kpiRFD">–</div><div class="sub">Dispatch→Billed</div></div>
+      <div class="kpi"><div class="label">Delivered</div><div class="value" id="kpiDelivered">–</div><div class="sub">Tracking/Hand/Delivered/Cancelled</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Quick Filters</h2>
+      <div class="controls">
+        <label>Order Date <input type="date" id="dStart"> to <input type="date" id="dEnd"></label>
+        <label>Sheet <select id="sheetFilter"></select></label>
+        <label>Unit <select id="unitFilter"></select></label>
+        <button class="btn" id="applyDash">Apply</button>
+        <button id="resetDash">Reset</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Branch-wise Status Count</h2>
+      <div style="overflow:auto;">
+        <table class="table" id="branchTable"></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Unit-wise Status Count</h2>
+      <div style="overflow:auto;">
+        <table class="table" id="unitTable"></table>
+      </div>
+    </div>
+  </main>
 </div>
-
-<!-- Multi-status Filter -->
-<div class="controls">
-  <label><strong>Status:</strong></label>
-  <div class="status-checkboxes" id="statusCheckboxes"></div>
-  <button onclick="applyFilters()">Apply</button>
-  <button onclick="resetFilters()">Reset</button>
-</div>
-
-<!-- Search + Show Entries -->
-<div class="controls" style="justify-content: space-between; align-items: center;">
-  <input type="text" id="searchBar" placeholder="🔍 Search..." oninput="searchTable()">
-  <label>Show 
-    <select id="entriesSelect" onchange="changeEntries()">
-      <option value="10">10</option>
-      <option value="25" selected>25</option>
-      <option value="50">50</option>
-      <option value="100">100</option>
-    </select> entries
-  </label>
-</div>
-
-<table id="dataTable"></table>
-<div class="pagination" id="pagination"></div>
 
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGbbUDu9LyWj04Lws9zu2fHG6lNMUOf_nLLlxUuJnogo2aw1FuBfTSni1UE73solgB/exec";
-const FIXED_SHEETS = [
-  "Branch Sales Order", "Jaipur Sales Order", "Jaipur Alterations",
-  "Exhibition Sales Order", "Wholesale Order"
-];
-const INCLUDED_COLUMNS = [
-  "Timestamp","Sheet Name","Order No",
-  "Order Date","Delivery Date","Item","Design No","Unit",
-  "Product Image","Order Form Photo","Remark","Status","Jobber Name"
-];
+const SHEETS = ["Branch Sales Order","Jaipur Sales Order","Jaipur Alterations","Exhibition Sales Order","Wholesale Order"];
+const ALL_STATUSES = ["","Order Received","Dye","Print Process","Print Received","For Work","From Work Received","Send To Party","Received From Party","Stitching","Finishing","Dispatch To Warehouse","Received At Warehouse","Send To D69","Received At D69","Ready For Delivery","Billed","Tracking Updated","Hand Delivery","Delivered","Cancelled"];
 
-let headers=[], rows=[], filteredRows=[], currentSort={index:null,dir:-1};
-let currentPage=1, rowsPerPage=25;
+const sets = {
+  inProd: ["","Order Received","Dye","Print Process","Print Received","For Work","From Work Received","Send To Party","Received From Party","Stitching","Finishing"],
+  rfd: ["Dispatch To Warehouse","Received At Warehouse","Send To D69","Received At D69","Ready For Delivery","Billed"],
+  delivered: ["Tracking Updated","Hand Delivery","Delivered","Cancelled"]
+};
 
-const safeLower = v => (v==null?"":String(v).toLowerCase());
-const clean = arr => Array.isArray(arr)?arr.filter(r=>Array.isArray(r)).map(r=>r.map(c=>c==null?"":String(c))):[];
+let rows=[]; // objects: { _sheet, Status, Unit, OrderDate (Date or ""), ... }
 
-function formatDateTime(val) {
-  if (!val) return "";
-  const d = new Date(val);
-  return isNaN(d)
-    ? val
-    : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-}
-
-function toThumb(url){
-  if(!url||typeof url!=="string")return"";
-  const idMatch=url.match(/[-\w]{25,}/);
-  const id=idMatch?idMatch[0]:null;
-  return id?`https://drive.google.com/thumbnail?id=${id}&sz=w200-h200`:"";
-}
+function clean(arr){ return Array.isArray(arr)?arr.filter(r=>Array.isArray(r)).map(r=>r.map(c=>c==null?"":String(c))):[]; }
 
 async function loadData(){
-  document.getElementById("dataTable").innerHTML="<tr><td>Loading data...</td></tr>";
   try{
-    const res=await fetch(SCRIPT_URL);
-    const data=await res.json();
-    const combined=combineSheetsObject(data);
-    headers=combined[0].map(h=>h||"");
-    rows=clean(combined.slice(1));
-    rows.sort((a,b)=>new Date(b[0])-new Date(a[0]));
-    filteredRows=rows;
-    populateFilters();
-    renderTable();
-  }catch(e){document.getElementById("dataTable").innerHTML=`<tr><td>❌ ${e.message}</td></tr>`;}
-}
+    const res = await fetch(`${SCRIPT_URL}?t=${Date.now()}`);
+    const json = await res.json();
 
-function combineSheetsObject(obj){
-  const out=[INCLUDED_COLUMNS];
-  FIXED_SHEETS.forEach(sheet=>{
-    const sheetData=obj[sheet];
-    if(!Array.isArray(sheetData)||sheetData.length<2)return;
-    const headers=sheetData[0];
-    sheetData.slice(1).forEach(r=>{
-      if(!Array.isArray(r))return;
-      const mapped=INCLUDED_COLUMNS.map(h=>{
-        const idx=headers.indexOf(h);
-        return idx===-1?"":r[idx]||"";
+    // Dynamically map each sheet; pick fields if present
+    const out=[];
+    SHEETS.forEach(name=>{
+      const d=json[name];
+      if(!Array.isArray(d)||d.length<2) return;
+      const hs = d[0];
+      const idx = k => hs.indexOf(k);
+      const iStatus = idx("Status");
+      const iUnit   = idx("Unit");
+      const iOD     = idx("Order Date");
+      const iTS     = idx("Timestamp");
+      d.slice(1).forEach(r=>{
+        const status = iStatus===-1 ? "" : (r[iStatus]??"");
+        const unit   = iUnit===-1   ? "" : (r[iUnit]??"");
+        const odRaw  = iOD!==-1 ? r[iOD] : (iTS!==-1 ? r[iTS] : "");
+        const od = odRaw ? new Date(odRaw) : "";
+        out.push({ _sheet:name, Status:String(status), Unit:String(unit), OrderDate: isNaN(od)? "" : od });
       });
-      const tsIdx=headers.indexOf("Timestamp");
-      mapped[0]=tsIdx>=0?r[tsIdx]:"";
-      mapped[1]=sheet;
-      out.push(mapped);
     });
+
+    rows = out;
+    populateFilters();
+    renderDashboard();
+  }catch(e){
+    console.error(e);
+    document.getElementById("branchTable").innerHTML = `<tr><td style="color:#b00020;font-weight:600">❌ ${e.message}</td></tr>`;
+  }
+}
+
+function populateFilters(){
+  const sheets=[...new Set(rows.map(r=>r._sheet).filter(Boolean))];
+  const units=[...new Set(rows.map(r=>r.Unit).filter(Boolean))];
+  sheetFilter.innerHTML = `<option value="">All</option>` + sheets.map(s=>`<option>${s}</option>`).join("");
+  unitFilter.innerHTML  = `<option value="">All</option>` + units.map(u=>`<option>${u}</option>`).join("");
+
+  applyDash.onclick = ()=>{
+    renderDashboard(sheetFilter.value, unitFilter.value, dStart.value, dEnd.value);
+  };
+  resetDash.onclick = ()=>{
+    dStart.value=""; dEnd.value=""; sheetFilter.value=""; unitFilter.value="";
+    renderDashboard();
+  };
+}
+
+function renderDashboard(sheet="", unit="", ds="", de=""){
+  // filter for dashboard
+  const data = rows.filter(r=>{
+    const okS = !sheet || r._sheet===sheet;
+    const okU = !unit  || r.Unit===unit;
+    const okD1= !ds    || (r.OrderDate && r.OrderDate>=new Date(ds));
+    const okD2= !de    || (r.OrderDate && r.OrderDate<=new Date(de+"T23:59:59"));
+    return okS && okU && okD1 && okD2;
   });
-  return out;
+
+  // KPIs
+  const total = data.length;
+  const inProd = data.filter(r=>sets.inProd.includes((r.Status||"").trim())).length;
+  const rfd    = data.filter(r=>sets.rfd.includes((r.Status||"").trim())).length;
+  const delivered = data.filter(r=>sets.delivered.includes((r.Status||"").trim())).length;
+
+  kpiTotal.textContent = total;
+  kpiInProd.textContent = inProd;
+  kpiRFD.textContent = rfd;
+  kpiDelivered.textContent = delivered;
+
+  const ods = data.map(r=>r.OrderDate).filter(d=>d && !isNaN(d));
+  kpiRange.textContent = ods.length
+    ? new Date(Math.min(...ods)).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}) + " – " +
+      new Date(Math.max(...ods)).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})
+    : "";
+
+  // counts by sheet & unit
+  const bySheet = groupCounts(data, "_sheet");
+  const byUnit  = groupCounts(data, "Unit");
+  renderCountTable("branchTable","Branch", bySheet);
+  renderCountTable("unitTable","Unit", byUnit);
+
+  // enable sorting on both tables
+  enableTableSorting("branchTable");
+  enableTableSorting("unitTable");
 }
 
-function populateFilters() {
-  const units = new Set();
-  const sheetNames = new Set();
-  const statuses = [
-    "", // 👈 blank option for filter
-    "Order Received","Dye","Print Process","Print Received","For Work",
-    "From Work Received","Send To Party","Received From Party","Stitching","Finishing",
-    "Dispatch To Warehouse","Received At Warehouse","Send To D69","Received At D69",
-    "Ready For Delivery","Billed","Tracking Updated","Hand Delivery","Delivered","Cancelled"
-  ];
-
-  const uIdx = headers.indexOf("Unit");
-  const sIdx = headers.indexOf("Sheet Name");
-
-  rows.forEach(r => {
-    if (r[uIdx]) units.add(r[uIdx]);
-    if (r[sIdx]) sheetNames.add(r[sIdx]);
+function groupCounts(data, key){
+  const map = {};
+  // seed with all statuses so columns are stable
+  const seed = ()=>Object.fromEntries(ALL_STATUSES.map(s=>[s,0]));
+  data.forEach(r=>{
+    const k = r[key] || "(unknown)";
+    const s = (r.Status||"").trim();
+    if(!map[k]) map[k]=seed();
+    map[k][s] = (map[k][s]||0)+1;
   });
-
-  document.getElementById("filterUnit").innerHTML =
-    `<option value="">All</option>` + [...units].map(u => `<option>${u}</option>`).join("");
-
-  document.getElementById("filterSheet").innerHTML =
-    `<option value="">All</option>` + [...sheetNames].map(n => `<option>${n}</option>`).join("");
-
-  document.getElementById("statusCheckboxes").innerHTML =
-    statuses.map(s => {
-      const label = s || "(blank)";
-      return `<label><input type="checkbox" value="${s}"> ${label}</label>`;
-    }).join("");
+  return map;
 }
 
-function applyFilters(){
-  const orderNo=safeLower(document.getElementById("filterOrderNo").value);
-  const oStart=document.getElementById("filterOrderStart").value,oEnd=document.getElementById("filterOrderEnd").value;
-  const dStart=document.getElementById("filterDeliveryStart").value,dEnd=document.getElementById("filterDeliveryEnd").value;
-  const unit=document.getElementById("filterUnit").value;
-  const sheetName = document.getElementById("filterSheet").value;
-  const selStatuses=[...document.querySelectorAll(".status-checkboxes input:checked")].map(i=>i.value);
-  const iO=headers.indexOf("Order No"),iOD=headers.indexOf("Order Date"),iDD=headers.indexOf("Delivery Date"),iU=headers.indexOf("Unit"),iS=headers.indexOf("Status");
-  filteredRows=rows.filter(r=>{
-    const od=new Date(r[iOD]||""),dd=new Date(r[iDD]||"");
-    return(!orderNo||safeLower(r[iO]).includes(orderNo))&&(!sheetName || r[headers.indexOf("Sheet Name")] === sheetName) &&
-    (!unit||r[iU]===unit)&&(!selStatuses.length||selStatuses.includes(r[iS]))&&(!oStart||od>=new Date(oStart))&&(!oEnd||od<=new Date(oEnd+"T23:59:59"))&&(!dStart||dd>=new Date(dStart))&&(!dEnd||dd<=new Date(dEnd+"T23:59:59"));
-  });
-  currentPage=1;renderTable();
-}
+function renderCountTable(tableId, firstCol, countsObj){
+  const tbl=document.getElementById(tableId);
+  let thead = `<thead><tr><th>${firstCol}</th>`;
+  ALL_STATUSES.forEach(s=> thead += `<th>${s||"(blank)"}</th>`);
+  thead += `<th>Total</th></tr></thead>`;
 
-function resetFilters(){
-  document.querySelectorAll("input,select").forEach(e=>e.value="");
-  document.querySelectorAll(".status-checkboxes input").forEach(i=>i.checked=false);
-  filteredRows=rows;currentPage=1;renderTable();
-}
+  const entries = Object.entries(countsObj);
+  const totals = entries.map(([_,o])=>Object.values(o).reduce((a,b)=>a+b,0));
+  const maxT = Math.max(1, ...totals);
 
-function renderTable(){
-  const tbl=document.getElementById("dataTable");
-  if(!filteredRows.length){tbl.innerHTML="<tr><td>No data found</td></tr>";document.getElementById("pagination").innerHTML="";return;}
-  const start=(currentPage-1)*rowsPerPage,end=start+rowsPerPage,page=filteredRows.slice(start,end);
-  let html="<thead><tr>"+headers.map(h=>`<th>${h}</th>`).join("")+"<th>Actions</th></tr></thead><tbody>";
-
-  page.forEach(r=>{
-    html+="<tr>";
-    headers.forEach((h,i)=>{
-      let hClean = h.trim();
-      let tdClass = hClean === 'Order No' ? ' class="order-no"' : '';
-      let val=r[i]||"",hLow=safeLower(h);
-      if(hLow.includes("timestamp"))val=formatDateTime(val);
-      else if(hLow.includes("date"))val=formatDateTime(val);
-      else if((hLow.includes("image")||hLow.includes("photo"))&&val.includes("drive.google.com")){
-        const t=toThumb(val);
-        val=t?`<a href="${val}" target="_blank"><img src="${t}"></a>`:val;
-      }else if(h==="Status"){
-        const sheetStatus=(r[i]||"").trim().toLowerCase();
-        const allStatuses=[
-          "", // 👈 blank option for dropdown
-          "Order Received","Dye","Print Process","Print Received","For Work",
-          "From Work Received","Send To Party","Received From Party","Stitching","Finishing",
-          "Dispatch To Warehouse","Received At Warehouse","Send To D69","Received At D69",
-          "Ready For Delivery","Billed","Tracking Updated","Hand Delivery","Delivered","Cancelled"
-        ];
-        val="<select>"+allStatuses.map(s=>{
-          const sel=s.trim().toLowerCase()===sheetStatus?"selected":"";
-          const label=s||"(blank)";
-          return `<option ${sel} value="${s}">${label}</option>`;
-        }).join("")+"</select>";
-      }else if(h==="Remark")val=`<div class='remark-cell'>${val}</div>`;
-      html+=`<td${tdClass}>${val}</td>`;
+  let tbody = "<tbody>";
+  entries.forEach(([k,o])=>{
+    const t = Object.values(o).reduce((a,b)=>a+b,0);
+    tbody += `<tr><td>${k}</td>`;
+    ALL_STATUSES.forEach(s=>{
+      const val = o[s]||0;
+      const click = firstCol==="Branch"
+        ? `openOrders('sheet','${encodeURIComponent(k)}','${encodeURIComponent(s)}')`
+        : `openOrders('unit','${encodeURIComponent(k)}','${encodeURIComponent(s)}')`;
+      tbody += `<td class="clickable" onclick="${click}">${val}</td>`;
     });
-    html+=`
-      <td>
-        <button class='save-btn' onclick="saveRow(this,'${r[1]}')">Save</button>
-        <button onclick="generateOrderPrint('${r[1]}','${r[headers.indexOf("Order No")]}')">🧾 Print</button>
-      </td>
-    </tr>`;
+    const pct = Math.round(t/maxT*100);
+    tbody += `<td>${t}<div class="bar"><span style="width:${pct}%"></span></div></td></tr>`;
   });
 
-  tbl.innerHTML=html+"</tbody>";
-  renderPagination();
+  // grand total
+  const grand = Object.fromEntries(ALL_STATUSES.map(s=>[s,0])); let gTot=0;
+  entries.forEach(([_,o])=>{ ALL_STATUSES.forEach(s=> grand[s]+=o[s]||0); gTot += Object.values(o).reduce((a,b)=>a+b,0); });
+  tbody += `<tr><th>Total</th>${ALL_STATUSES.map(s=>`<th>${grand[s]}</th>`).join("")}<th>${gTot}</th></tr>`;
+  tbody += "</tbody>";
+
+  tbl.innerHTML = thead + tbody;
 }
 
-function renderPagination(){
-  const totalPages=Math.ceil(filteredRows.length/rowsPerPage);
-  const pg=document.getElementById("pagination");
-  if(totalPages<=1){pg.innerHTML="";return;}
-  let html=`<button onclick="gotoPrev()" ${currentPage===1?"disabled":""}>← Previous</button>`;
-  const startPage=Math.max(1,currentPage-2);
-  const endPage=Math.min(totalPages,startPage+4);
-  for(let i=startPage;i<=endPage;i++){
-    html+=`<button class="${i===currentPage?'active':''}" onclick="gotoPage(${i})">${i}</button>`;
-  }
-  html+=`<button onclick="gotoNext(${totalPages})" ${currentPage===totalPages?"disabled":""}>Next →</button>`;
-  pg.innerHTML=html;
+function openOrders(kind, key, status){
+  const p = new URLSearchParams();
+  if (kind==="sheet") p.set("sheet", key);
+  if (kind==="unit")  p.set("unit", key);
+  p.set("status", status);
+  // force hard load so filters reset + apply
+  window.location.href = `orders.html#${p.toString()}`;
 }
 
-function gotoPage(p){currentPage=p;renderTable();}
-function gotoPrev(){if(currentPage>1){currentPage--;renderTable();}}
-function gotoNext(total){if(currentPage<total){currentPage++;renderTable();}}
-function changeEntries(){rowsPerPage=parseInt(document.getElementById("entriesSelect").value);currentPage=1;renderTable();}
+/* basic table sorting for dashboard tables */
+function enableTableSorting(tableId){
+  const tbl = document.getElementById(tableId);
+  tbl.querySelectorAll("th").forEach((th,idx)=>{
+    th.onclick = ()=>{
+      const tbody = tbl.querySelector("tbody");
+      const rows = [...tbody.querySelectorAll("tr")];
+      const asc = !th.classList.contains("sort-asc");
+      tbl.querySelectorAll("th").forEach(h=>h.classList.remove("sort-asc","sort-desc"));
+      th.classList.add(asc?"sort-asc":"sort-desc");
 
-function searchTable(){
-  const term=safeLower(document.getElementById("searchBar").value);
-  filteredRows=rows.filter(r=>r.some(c=>safeLower(c).includes(term)));
-  currentPage=1;renderTable();
-}
-
-async function saveRow(btn,sheet){
-  const tr=btn.closest("tr"),tds=[...tr.children];
-  const orderCell = tr.querySelector("td.order-no");
-  let orderNo = orderCell ? orderCell.innerText.trim() : "";
-  if (!orderNo) {
-    const iO = headers.findIndex(h =>
-      h.replace(/\./g, "").trim().toLowerCase().includes("order no"));
-    if (iO >= 0) {
-      orderNo = tds[iO]?.innerText?.trim() || "";
-    }
-  }
-  console.log("🧾 Extracted Order No:", orderNo);
-  const sel=tr.querySelector("select"),rem=tr.querySelector(".remark-cell");
-  const status=sel?sel.value:"",remark=rem?rem.innerText.trim():"";
-  if(!orderNo)return alert("❌ Missing Order No");
-  try{
-    const res=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sheetName:sheet,orderNo,status,remark})});
-    const j=await res.json();
-    if(j.success)alert("✅ Updated successfully");else throw new Error(j.error||"Failed");
-  }catch(e){alert("❌ "+e.message);}
+      rows.sort((a,b)=>{
+        const A = a.children[idx]?.innerText.trim() ?? "";
+        const B = b.children[idx]?.innerText.trim() ?? "";
+        const nA = parseFloat(A.replace(/[^0-9.]/g,""));
+        const nB = parseFloat(B.replace(/[^0-9.]/g,""));
+        const cmp = (isNaN(nA)||isNaN(nB)) ? A.localeCompare(B) : (nA-nB);
+        return asc ? cmp : -cmp;
+      });
+      rows.forEach(r=>tbody.appendChild(r));
+    };
+  });
 }
 
 loadData();
-
-async function generateOrderPrint(sheetName, orderNo) {
-  if (!confirm("Generate Order Print for " + orderNo + "?")) return;
-  try {
-    const res = await fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "print", sheetName, orderNo })
-    });
-    const j = await res.json();
-    if (j.success && j.pdf) {
-      const pdfWindow = window.open("");
-      pdfWindow.document.write(
-        `<iframe width='100%' height='100%' src='data:application/pdf;base64,${j.pdf}'></iframe>`
-      );
-    } else if (j.success && j.url) {
-      window.open(j.url, "_blank");
-    } else {
-      alert("❌ " + (j.error || "Failed to generate print"));
-    }
-  } catch (e) {
-    alert("❌ " + e.message);
-  }
-}
 </script>
 </body>
 </html>
+
+
+
+
+
