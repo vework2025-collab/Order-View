@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vasansi Enterprise Application — Orders</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:,">
+<style>
+  #dataTable { width:100%; border-collapse:collapse; background:#fff; }
+  #dataTable th, #dataTable td { border:1px solid #ddd; padding:6px 8px; font-size:13px; white-space:nowrap; }
+  #dataTable th { background:#f5f6f7; position: sticky; top: 0; }
+  .controls { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; align-items:center; }
+  .save-btn { background:#28a745; color:#fff; padding:5px 10px; border:none; border-radius:4px; cursor:pointer; }
+  .save-btn:hover { background:#218838; }
+  .remark { min-width:180px; max-width:420px; white-space:normal; }
+  img { width: 100px; height: 150px; object-fit: cover; border-radius: 5px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="title">Vasansi Enterprise Application</div>
+    <div class="user">Hemant Solanki ▼</div>
+  </div>
+
+  <aside class="sidebar">
+    <ul class="nav">
+      <li><a href="index.html">🏠 <span class="label">Dashboard</span></a></li>
+      <li><a href="dispatch.html">📦 <span class="label">Dispatch</span></a></li>
+      <li><a href="jobwork.html">🧵 <span class="label">Job Work</span></a></li>
+      <li class="section-title">Order</li>
+      <li>
+        <a href="orders.html">📋 <span class="label">All Orders</span></a>
+        <ul class="submenu">
+          <li><a href="orders.html#Branch%20Sales%20Order">Branch Sales Order</a></li>
+          <li><a href="orders.html#Jaipur%20Sales%20Order">Jaipur Sales Order</a></li>
+          <li><a href="orders.html#Jaipur%20Alterations">Jaipur Alterations</a></li>
+          <li><a href="orders.html#Exhibition%20Sales%20Order">Exhibition Sales Order</a></li>
+          <li><a href="orders.html#Wholesale%20Order">Wholesale Order</a></li>
+        </ul>
+      </li>
+      <li>
+  <a href="#">🏭 <span class="label">Production</span></a>
+  <ul class="submenu">
+    <li><a href="production.html">Production Overview</a></li>
+    <li>
+  <a href="https://script.google.com/macros/s/AKfycbwdBfo7pkIp6qijqbm6OFRVwuiupx_Y6-B00nqDm69MqQp9FXRw0cpi0vC_vf_rm-Rv/exec" 
+     target="_blank">
+     Sample Form
+  </a>
+</li>
+    <li><a href="sample_view.html">Sample View</a></li>
+  </ul>
+</li>
+
+      <li><a href="reports.html">📑 <span class="label">Reports</span></a></li>
+    </ul>
+  </aside>
+
+  <main class="content">
+    <div class="card">
+      <h2>Orders</h2>
+
+      <div class="controls">
+        <label>Order No <input type="text" id="filterOrderNo" placeholder="Enter order no..."></label>
+        <label>Order Date <input type="date" id="filterOrderStart"> to <input type="date" id="filterOrderEnd"></label>
+        <label>Delivery Date <input type="date" id="filterDeliveryStart"> to <input type="date" id="filterDeliveryEnd"></label>
+        <label>Unit <select id="filterUnit"></select></label>
+        <label>Sheet <select id="filterSheet"></select></label>
+        <button class="btn" id="btnApply">Search</button>
+        <button id="btnReset">Reset</button>
+      </div>
+
+      <div class="controls">
+        <label><strong>Status:</strong></label>
+        <div id="statusBoxes" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      </div>
+      
+<div id="pageInfo" style="margin-top:6px;font-size:12px;color:#555;"></div>
+<!-- Universal Search + Entries per page -->
+<div class="controls" id="searchEntriesBar" style="justify-content: space-between;">
+  <input type="text" id="searchBar" placeholder="🔍 Search..." style="flex:1; max-width:300px;">
+  <label>Show
+    <select id="entriesSelect">
+      <option value="10">10</option>
+      <option value="25" selected>25</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+    </select> entries
+  </label>
+</div>
+      <table id="dataTable"><tr><td>Loading data...</td></tr></table>
+      <div class="pagination" id="pagination"></div>
+    </div>
+    <div id="pageInfo" style="margin-top:6px;font-size:12px;color:#555;"></div>
+<div class="pagination" id="pagination" style="margin-top:6px;"></div>
+     </main>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGbbUDu9LyWj04Lws9zu2fHG6lNMUOf_nLLlxUuJnogo2aw1FuBfTSni1UE73solgB/exec";
+const SHEETS = ["Branch Sales Order","Jaipur Sales Order","Jaipur Alterations","Exhibition Sales Order","Wholesale Order"];
+const VISIBLE = [
+  "Sr No","Order No","Order Date","Customer Name","Item","Design No",
+  "Delivery Date","Unit","Status","Remark","Product Image","Order Form Photo"
+];
+const ALL_STATUSES = ["","Order Received","Dye","Print Process","Print Received","For Work","From Work Received","Send To Party","Received From Party","Stitching","Finishing","Dispatch To Warehouse","Received At Warehouse","Send To D69","Received At D69","Ready For Delivery","Billed","Tracking Updated","Hand Delivery","Delivered","Cancelled"];
+
+let rows = [];
+let filtered = [];
+let currentSearchTerm = "";
+let currentPage = 1;
+let rowsPerPage = 25;
+
+function clean(arr){
+  return Array.isArray(arr)
+    ? arr.filter(r=>Array.isArray(r)).map(r=>r.map(c=>c==null?"":String(c)))
+    : [];
+}
+
+function toThumb(url){
+  const m = (typeof url==="string") ? url.match(/[-\w]{25,}/) : null;
+  const id = m ? m[0] : null;
+  return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w200-h200` : url;
+}
+
+
+// ======= MAIN LOADER =======
+async function loadData(){
+  const tbl=document.getElementById("dataTable");
+  tbl.innerHTML="<tr><td>Loading data...</td></tr>";
+  try{
+    const res = await fetch(`${SCRIPT_URL}?t=${Date.now()}`);
+    const json = await res.json();
+
+    const out=[];
+    SHEETS.forEach(name=>{
+      const d=json[name];
+      if(!Array.isArray(d)||d.length<2) return;
+      const hs = d[0];
+      d.slice(1).forEach(r=>{
+        const o={};
+        VISIBLE.forEach(col=>{
+          const idx = hs.indexOf(col);
+          o[col] = idx===-1 ? "" : (r[idx]??"");
+        });
+        o._sheet = name;
+        out.push(o);
+      });
+    });
+
+    rows = out;
+    // ✅ Sort rows by Order Date (newest first)
+rows.sort((a, b) => {
+  const da = new Date(a["Order Date"]);
+  const db = new Date(b["Order Date"]);
+  if (isNaN(da) && isNaN(db)) return 0;
+  if (isNaN(da)) return 1;
+  if (isNaN(db)) return -1;
+  return db - da; // newest first
+});
+
+    populateFilters();
+    initSearchAndEntries();   // ✅ new search + entries
+    handleHashDeepLink();
+    filtered = rows.slice();
+    renderTable();
+  }catch(e){
+    console.error(e);
+    tbl.innerHTML=`<tr><td style="color:#b00020;font-weight:600">❌ ${e.message}</td></tr>`;
+  }
+}
+
+// ======= FILTER CONTROLS =======
+function populateFilters(){
+  const units = [...new Set(rows.map(r=>r["Unit"]).filter(Boolean))];
+  const sheets = [...new Set(rows.map(r=>r._sheet).filter(Boolean))];
+
+  filterUnit.innerHTML  = `<option value="">All</option>` + units.map(u=>`<option>${u}</option>`).join("");
+  filterSheet.innerHTML = `<option value="">All</option>` + sheets.map(s=>`<option>${s}</option>`).join("");
+
+  statusBoxes.innerHTML = ALL_STATUSES.map(s=>{
+    const label = s || "(blank)";
+    return `<label><input type="checkbox" value="${s}"> ${label}</label>`;
+  }).join("");
+
+  btnApply.onclick = applyFilters;
+  btnReset.onclick = resetFilters;
+}
+
+// ======= UNIVERSAL SEARCH + SHOW ENTRIES =======
+function initSearchAndEntries() {
+  const searchInput = document.getElementById("searchBar");
+  const entriesSelect = document.getElementById("entriesSelect");
+
+  if (entriesSelect) {
+    entriesSelect.value = rowsPerPage;
+    entriesSelect.addEventListener("change", () => {
+      rowsPerPage = parseInt(entriesSelect.value, 10) || 25;
+      currentPage = 1;
+      renderTable();
+    });
+  }
+
+  if (searchInput) {
+    // Add clear button ❌ dynamically
+    const clearBtn = document.createElement("span");
+    clearBtn.textContent = "❌";
+    clearBtn.style.cursor = "pointer";
+    clearBtn.style.marginLeft = "6px";
+    clearBtn.style.display = "none";
+    clearBtn.style.userSelect = "none";
+    clearBtn.onclick = () => {
+      searchInput.value = "";
+      currentSearchTerm = "";
+      clearBtn.style.display = "none";
+      applyFilters();
+    };
+    searchInput.parentNode.insertBefore(clearBtn, searchInput.nextSibling);
+
+    searchInput.addEventListener("input", () => {
+      currentSearchTerm = searchInput.value.trim().toLowerCase();
+      clearBtn.style.display = currentSearchTerm ? "inline" : "none";
+      applyFilters();
+    });
+  }
+}
+
+// ======= FILTER LOGIC (with search integrated) =======
+function applyFilters(){
+  const orderNo = (filterOrderNo.value||"").toLowerCase();
+  const oS=filterOrderStart.value, oE=filterOrderEnd.value;
+  const dS=filterDeliveryStart.value, dE=filterDeliveryEnd.value;
+  const unit=filterUnit.value, sheet=filterSheet.value;
+  const chosen = [...document.querySelectorAll("#statusBoxes input:checked")].map(i=>i.value);
+
+  filtered = rows.filter(r=>{
+    const od = new Date(r["Order Date"]||"");
+    const dd = new Date(r["Delivery Date"]||"");
+    const st = r["Status"] ?? "";
+
+    const ok =
+      (!orderNo || String(r["Order No"]||"").toLowerCase().includes(orderNo)) &&
+      (!sheet || r._sheet===sheet) &&
+      (!unit || r["Unit"]===unit) &&
+      (!chosen.length || chosen.includes(st)) &&
+      (!oS || od>=new Date(oS)) &&
+      (!oE || od<=new Date(oE+"T23:59:59")) &&
+      (!dS || dd>=new Date(dS)) &&
+      (!dE || dd<=new Date(dE+"T23:59:59"));
+
+    if (!ok) return false;
+
+    // 🔍 universal search across all columns
+    if (currentSearchTerm) {
+      const match = Object.values(r).some(v =>
+        String(v||"").toLowerCase().includes(currentSearchTerm)
+      );
+      if (!match) return false;
+    }
+
+    return true;
+  });
+
+  currentPage = 1;
+  renderTable();
+}
+
+function resetFilters(){
+  document.querySelectorAll(".card .controls input, .card .controls select").forEach(el=>el.value="");
+  document.querySelectorAll("#statusBoxes input").forEach(i=>i.checked=false);
+  currentSearchTerm = "";
+  const clearBtn = document.querySelector("#searchEntriesBar span");
+  if (clearBtn) clearBtn.style.display = "none";
+  filtered = rows.slice();
+  currentPage=1;
+  renderTable();
+}
+
+// ======= HASH LINKS (branch/unit/status) =======
+function handleHashDeepLink(){
+  const raw = location.hash.substring(1);
+  if (!raw) return;
+  resetFilters();
+
+  if (!raw.includes("=")){
+    const sheet = decodeURIComponent(raw);
+    filterSheet.value = sheet;
+    applyFilters();
+    return;
+  }
+
+  const p = new URLSearchParams(raw);
+  const sheet  = p.get("sheet");
+  const unit   = p.get("unit");
+  const status = p.get("status");
+
+  if (sheet) filterSheet.value = decodeURIComponent(sheet);
+  if (unit)  filterUnit.value  = decodeURIComponent(unit);
+  if (status){
+    const s = decodeURIComponent(status);
+    document.querySelectorAll("#statusBoxes input").forEach(i=> i.checked = (i.value===s) );
+  }
+  applyFilters();
+}
+
+// ======= RENDER TABLE + PAGINATION =======
+function renderTable(){
+  const tbl = document.getElementById("dataTable");
+  if(!filtered.length){
+    tbl.innerHTML="<tr><td>No data found</td></tr>";
+    document.getElementById("pagination").innerHTML="";
+    document.getElementById("pageInfo").textContent="";
+    return;
+  }
+
+  function fmtDate(v){
+    if(!v) return "";
+    const d = new Date(v);
+    if(isNaN(d)) return v;
+    return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
+  }
+
+  const cols = [...VISIBLE,"Actions"];
+  let thead = "<thead><tr>"+cols.map(h=>`<th>${h}</th>`).join("")+"</tr></thead>";
+
+  const start=(currentPage-1)*rowsPerPage;
+  const end=Math.min(start+rowsPerPage,filtered.length);
+  const page=filtered.slice(start,end);
+
+  let tbody="<tbody>";
+  page.forEach(r=>{
+    tbody += `<tr data-sheet="${r._sheet}">`;
+    VISIBLE.forEach(h=>{
+      let v = r[h] ?? "";
+      if(["Order Date","Delivery Date"].includes(h)) v = fmtDate(v);
+      if (h === "Product Image" || h === "Order Form Photo") {
+  if (String(v).trim() !== "") {
+    const t = toThumb(v);
+    v = `<a href="${v}" target="_blank"><img src="${t}"></a>`;
+  }
+}
+ else if (h==="Status"){
+        const cur=String(v||"").trim().toLowerCase();
+        v = `<select class="status-select">`+
+          ALL_STATUSES.map(s=>{
+            const sel = String(s).trim().toLowerCase()===cur ? "selected":"";
+            const label = s || "(blank)";
+            return `<option ${sel} value="${s}">${label}</option>`;
+          }).join("")+`</select>`;
+      } else if (h==="Remark"){
+        v = `<div class="remark" contenteditable="true">${v}</div>`;
+      }
+      tbody += `<td>${v}</td>`;
+    });
+    const orderNo = String(r["Order No"]||"").replace(/"/g,"&quot;");
+    tbody += `<td>
+      <button class="save-btn" onclick="saveRow(this,'${orderNo}')">Save</button>
+      <button onclick="printRow(this,'${orderNo}')">🧾 Print</button>
+    </td>`;
+    tbody += "</tr>";
+  });
+  tbody+="</tbody>";
+  tbl.innerHTML = thead + tbody;
+
+  renderPaginationClassic();
+  const entriesSelect = document.getElementById("entriesSelect");
+  if(entriesSelect) entriesSelect.value = rowsPerPage;
+}
+
+// ======= PAGINATION CLASSIC =======
+function renderPaginationClassic(){
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
+
+  if(currentPage>totalPages) currentPage = totalPages;
+  if(currentPage<1) currentPage = 1;
+
+  const startRow = total ? (currentPage - 1) * rowsPerPage + 1 : 0;
+  const endRow   = Math.min(total, currentPage * rowsPerPage);
+  const info = document.getElementById("pageInfo");
+  if(info) info.textContent = `Showing ${startRow}–${endRow} of ${total} entries`;
+
+  const box = document.getElementById("pagination");
+  if(totalPages<=1){ box.innerHTML=""; return; }
+
+  let html = "";
+  html += `<button onclick="gotoPage(1)" ${currentPage===1?"disabled":""}>⏮ First</button>`;
+  html += `<button onclick="gotoPrev()" ${currentPage===1?"disabled":""}>← Prev</button>`;
+
+  const win=7;
+  let s=Math.max(1,currentPage-Math.floor(win/2));
+  let e=Math.min(totalPages,s+win-1);
+  if(e-s<win-1) s=Math.max(1,e-win+1);
+
+  for(let i=s;i<=e;i++){
+    html += `<button class="${i===currentPage?'active':''}" onclick="gotoPage(${i})">${i}</button>`;
+  }
+
+  html += `<button onclick="gotoNext(${totalPages})" ${currentPage===totalPages?"disabled":""}>Next →</button>`;
+  html += `<button onclick="gotoPage(${totalPages})" ${currentPage===totalPages?"disabled":""}>Last ⏭</button>`;
+  box.innerHTML = html;
+}
+
+function gotoPage(p){ currentPage=p; renderTable(); }
+function gotoPrev(){ if(currentPage>1){ currentPage--; renderTable(); } }
+function gotoNext(t){ if(currentPage<t){ currentPage++; renderTable(); } }
+
+// ======= SAVE / PRINT =======
+async function saveRow(btn, orderNo){
+  const tr = btn.closest("tr");
+  const sheetName = tr.dataset.sheet;
+  const sel = tr.querySelector(".status-select");
+  const remarkDiv = tr.querySelector(".remark");
+  const status = sel ? sel.value : "";
+  const remark = remarkDiv ? remarkDiv.innerText.trim() : "";
+  if (!orderNo) return alert("❌ Missing Order No");
+  try{
+    const res = await fetch(SCRIPT_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ sheetName, orderNo, status, remark })
+    });
+    const j = await res.json();
+    if (j.success) alert("✅ Updated successfully"); else throw new Error(j.error||"Failed");
+  }catch(e){ alert("❌ "+e.message); }
+}
+
+async function printRow(btn, orderNo){
+  const sheetName = btn.closest("tr").dataset.sheet;
+  if (!orderNo) return alert("❌ Missing Order No");
+  if (!confirm("Generate Order Print for " + orderNo + "?")) return;
+  try{
+    const res = await fetch(SCRIPT_URL, {
+      method:"POST",
+      headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      body: JSON.stringify({ action:"print", sheetName, orderNo })
+    });
+    const j = await res.json();
+    if (j.success && j.pdf){
+      const w = window.open("");
+      w.document.write(`<iframe width='100%' height='100%' src='data:application/pdf;base64,${j.pdf}'></iframe>`);
+    } else if (j.success && j.url){
+      window.open(j.url,"_blank");
+    } else {
+      alert("❌ " + (j.error || "Failed to generate print"));
+    }
+  }catch(e){ alert("❌ "+e.message); }
+}
+
+loadData();
+</script>
+</body>
+</html>
