@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sample View</title>
+<style>
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f8faff;
+    margin: 0;
+    padding: 20px;
+  }
+
+  h1 {
+    color: #0a53be;
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  select, input {
+    padding: 8px 10px;
+    border: 1px solid #d0d7e2;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    transition: all 0.2s;
+  }
+  select:hover, input:hover {
+    border-color: #0a53be;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  th {
+    background: #0a53be;
+    color: #fff;
+    padding: 12px 10px;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  td {
+    padding: 10px;
+    border-bottom: 1px solid #f0f2f5;
+  }
+
+  tr:hover {
+    background-color: #f3f7ff;
+  }
+
+ img.thumb {
+  width: 100px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  background: #fafafa;
+  transition: transform 0.2s;
+}
+img.thumb:hover {
+  transform: scale(2);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  z-index: 99;
+}
+
+
+  @media (max-width: 768px) {
+    th, td { font-size: 12px; padding: 8px; }
+    img.thumb { width: 50px; height: 50px; }
+  }
+</style>
+
+</head>
+<body>
+<h1>Sample View</h1>
+
+<div class="filter-bar">
+  <div>
+    <label>Designer:</label>
+    <select id="designerFilter"><option value="">All</option></select>
+  </div>
+  <div>
+    <label>Unit:</label>
+    <select id="unitFilter"><option value="">All</option></select>
+  </div>
+  <div>
+    <label>Product:</label>
+    <select id="productFilter"><option value="">All</option></select>
+  </div>
+  <div>
+    <label>Print Style ID:</label>
+    <select id="styleIdFilter"><option value="">All</option></select>
+  </div>
+  <div>
+    <label>Print Style No:</label>
+    <select id="styleNoFilter"><option value="">All</option></select>
+  </div>
+  <div>
+    <label>Design No:</label>
+    <input type="text" id="searchBox" placeholder="Search Design No">
+  </div>
+</div>
+
+
+<table id="samplesTable">
+  <thead>
+    <tr>
+      <th>Sr No</th>
+      <th>Designer Name</th>
+      <th>Unit</th>
+      <th>Product Name</th>
+      <th>Print Style ID</th>
+      <th>Print Style No</th>
+      <th>Design No</th>
+      <th>Product Image (Front)</th>
+      <th>Product Image (Back)</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdBfo7pkIp6qijqbm6OFRVwuiupx_Y6-B00nqDm69MqQp9FXRw0cpi0vC_vf_rm-Rv/exec";
+
+let allData = [];
+
+async function loadSamples() {
+  const res = await fetch(`${SCRIPT_URL}?action=getSamplesData`);
+  const data = await res.json();
+  allData = data;
+  populateFilters(data);
+  renderTable(data);
+}
+
+function populateFilters(data) {
+  const unique = (key) => [...new Set(data.map(d => d[key]).filter(Boolean))];
+  const setOptions = (id, values) => {
+    const el = document.getElementById(id);
+    el.innerHTML = `<option value="">All</option>` + values.map(v => `<option>${v}</option>`).join("");
+  };
+  setOptions("designerFilter", unique("designerName"));
+  setOptions("unitFilter", unique("unit"));
+  setOptions("productFilter", unique("productName"));
+  setOptions("styleIdFilter", unique("printStyleId"));
+  setOptions("styleNoFilter", unique("printStyleNo"));
+}
+
+function renderTable(data) {
+  const tbody = document.querySelector("#samplesTable tbody");
+  tbody.innerHTML = "";
+  data.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.srNo}</td>
+      <td>${row.designerName || ""}</td>
+      <td>${row.unit || ""}</td>
+      <td>${row.productName || ""}</td>
+      <td>${row.printStyleId || ""}</td>
+      <td>${row.printStyleNo || ""}</td>
+      <td>${row.designNo || ""}</td>
+      <td>${row.imageFront ? `<a href="${row.imageFront}" target="_blank"><img class="thumb" src="${row.imageFront}"></a>` : ""}</td>
+      <td>${row.imageBack ? `<a href="${row.imageBack}" target="_blank"><img class="thumb" src="${row.imageBack}"></a>` : ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function applyFilters() {
+  let filtered = [...allData];
+
+  const filters = {
+    designerName: document.getElementById("designerFilter").value,
+    unit: document.getElementById("unitFilter").value,
+    productName: document.getElementById("productFilter").value,
+    printStyleId: document.getElementById("styleIdFilter").value,
+    printStyleNo: document.getElementById("styleNoFilter").value,
+    search: document.getElementById("searchBox").value.toLowerCase()
+  };
+
+  Object.entries(filters).forEach(([key, val]) => {
+    if (!val) return;
+    if (key === "search") {
+      filtered = filtered.filter(d => (d.designNo || "").toLowerCase().includes(val));
+    } else {
+      filtered = filtered.filter(d => (d[key] || "") === val);
+    }
+  });
+
+  renderTable(filtered);
+}
+
+
+document.querySelectorAll(".filter-bar select, #searchBox").forEach(el => {
+  el.addEventListener("change", applyFilters);
+  el.addEventListener("keyup", applyFilters);
+});
+
+loadSamples();
+</script>
+</body>
+</html>
