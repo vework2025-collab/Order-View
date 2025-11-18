@@ -61,7 +61,7 @@ body {
 .card .controls input, .card .controls select, .card .controls button {
   padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; background: #fff;
 }
-.btn { background: var(--link); color: #fff; border: none; cursor: pointer; }
+.btn { background: var(--link); color: #000000; border: none; cursor: pointer; }
 .btn:hover { background: #0056b3; }
 
 /* Dash helper table */
