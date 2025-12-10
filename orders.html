@@ -265,16 +265,16 @@ function applyFilters(){
   renderTable();
 }
 
-//function resetFilters(){
-  //document.querySelectorAll(".card .controls input, .card .controls select").forEach(el=>el.value="");
-  //document.querySelectorAll("#statusBoxes input").forEach(i=>i.checked=false);
-  //currentSearchTerm = "";
-  //const clearBtn = document.querySelector("#searchEntriesBar span");
-  //if (clearBtn) clearBtn.style.display = "none";
-  //filtered = rows.slice();
-  //currentPage=1;
-  //renderTable();
-//}
+function resetFilters(){
+  document.querySelectorAll(".card .controls input, .card .controls select").forEach(el=>el.value="");
+  document.querySelectorAll("#statusBoxes input").forEach(i=>i.checked=false);
+  currentSearchTerm = "";
+  const clearBtn = document.querySelector("#searchEntriesBar span");
+  if (clearBtn) clearBtn.style.display = "none";
+  filtered = rows.slice();
+  currentPage=1;
+  renderTable();
+}
 
 // ======= HASH LINKS (branch/unit/status) =======
 function handleHashDeepLink(){
